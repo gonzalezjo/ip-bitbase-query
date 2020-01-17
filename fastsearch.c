@@ -11,18 +11,18 @@ static inline ip_address decode_ip(const char *p_ip) {
   ip_address l_ip = {0};
 
   sscanf(p_ip, "%hhu.%hhu.%hhu.%hhu",
-        &l_ip.bytes[3],
-        &l_ip.bytes[2],
+        &l_ip.bytes[0],
         &l_ip.bytes[1],
-        &l_ip.bytes[0]);
+        &l_ip.bytes[2],
+        &l_ip.bytes[3]);
 
   return l_ip;
 };
 
 void create_database(const char *p_src, const char *p_dst) {
-  char        l_buffer[32] = {0};
-  size_t      l_max_term   = 0;
-  database   *l_database   = calloc(1, sizeof(database));
+  char      l_buffer[32] = {0};
+  size_t    l_max_term   = 0;
+  database *l_database   = calloc(1, sizeof(database));
 
   if (!l_database) {
     printf("calloc failed!\n");
@@ -39,9 +39,9 @@ void create_database(const char *p_src, const char *p_dst) {
     }
 
     while (fgets(l_buffer, sizeof(l_buffer), l_ip_list_handle)) {
-      const ip_address l_ip      = decode_ip(l_buffer);
-      const uint8_t    l_lsb     = l_ip.bytes[3];
-      const size_t     l_index   = l_ip.bin >> 8;
+      const ip_address l_ip    = decode_ip(l_buffer);
+      const uint8_t    l_lsb   = l_ip.bytes[3];
+      const size_t     l_index = l_ip.bin & 0xffffff;
 
       if (l_index >= l_max_term) {
         l_max_term = l_index + 1;
@@ -56,9 +56,9 @@ void create_database(const char *p_src, const char *p_dst) {
 
   // Write out compressed DB
   {
+    char        *l_buf   = calloc(1, sizeof(database));
     const size_t l_bytes = l_max_term * sizeof(terminal)
                                       + sizeof(l_database->max_terminal_address);
-    char        *l_buf   = calloc(1, sizeof(database));
     const size_t l_size  = LZ4_compress_fast((void*) l_database, l_buf, 
                                              l_bytes, sizeof(database), 3);
 
@@ -99,7 +99,7 @@ database *read_database(const char *p_name) {
 int ip_in_database(const database *p_database, const char *p_ip_address) {
   const ip_address l_ip    = decode_ip(p_ip_address);
   const uint8_t    l_lsb   = l_ip.bytes[3];
-  const size_t     l_index = l_ip.bin >> 8;
+  const size_t     l_index = l_ip.bin & 0xffffff;
 
   if (l_index >= p_database->max_terminal_address) {
     return 0;
