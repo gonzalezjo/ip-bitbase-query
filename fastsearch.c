@@ -48,7 +48,7 @@ void create_database(const char *p_src, const char *p_dst) {
         l_database->max_terminal_address = l_max_term;
       }
 
-      l_database->terminals[l_index][l_lsb >> 6] |= 1ULL << (l_lsb >> 2);
+      l_database->terminals[l_index][l_lsb >> 6] |= 1ULL << (l_lsb & 0b111111);
     }
 
     fclose(l_ip_list_handle);
@@ -56,12 +56,12 @@ void create_database(const char *p_src, const char *p_dst) {
 
   // Write out compressed DB
   {
-    char        *l_buf   = calloc(1, sizeof(database));
-    const size_t l_bytes = l_max_term * sizeof(terminal)
-                                      + sizeof(l_database->max_terminal_address);
-    const size_t l_size  = LZ4_compress_fast((void*) l_database, l_buf, 
-                                             l_bytes, sizeof(database), 3);
-
+    char        *l_buf      = calloc(1, sizeof(database));
+    const size_t l_bytes    = l_max_term * sizeof(terminal)
+                            + sizeof(l_database->max_terminal_address);
+    const size_t l_size     = LZ4_compress_fast((void*) l_database, l_buf, 
+                                                l_bytes, sizeof(database), 
+                                                LZ4_ACCEL_LVL);
     FILE *l_database_handle = fopen(p_dst, "wb");
 
     fprintf(l_database_handle, "%zu", l_size);
@@ -105,5 +105,5 @@ int ip_in_database(const database *p_database, const char *p_ip_address) {
     return 0;
   }
 
-  return !!(p_database->terminals[l_index][l_lsb >> 6] & 1ULL << (l_lsb >> 2));
+  return !!(p_database->terminals[l_index][l_lsb >> 6] & 1ULL << (l_lsb & 0b111111));
 }
