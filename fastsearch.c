@@ -48,7 +48,7 @@ void create_database(const char *p_src, const char *p_dst) {
         l_database->max_terminal_address = l_max_term;
       }
 
-      l_database->terminals[l_index][l_lsb >> 6] |= 1ULL << (l_lsb >> 2);
+      l_database->terminals[l_index][l_lsb >> 6] |= 1ULL << (l_lsb & 0b111111);
     }
 
     fclose(l_ip_list_handle);
@@ -105,5 +105,5 @@ int ip_in_database(const database *p_database, const char *p_ip_address) {
     return 0;
   }
 
-  return !!(p_database->terminals[l_index][l_lsb >> 6] & 1ULL << (l_lsb >> 2));
+  return !!(p_database->terminals[l_index][l_lsb >> 6] & 1ULL << (l_lsb & 0b111111));
 }
