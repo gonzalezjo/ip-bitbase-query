@@ -97,9 +97,9 @@ database *read_database(const char *p_name) {
 }
 
 int ip_in_database(const database *p_database, const char *p_ip_address) {
-  const ip_address l_ip      = decode_ip(p_ip_address);
-  const uint8_t    l_lsb     = l_ip.bytes[3];
-  const size_t     l_index   = l_ip.bin >> 8;
+  const ip_address l_ip    = decode_ip(p_ip_address);
+  const uint8_t    l_lsb   = l_ip.bytes[3];
+  const size_t     l_index = l_ip.bin >> 8;
 
   if (l_index >= p_database->max_terminal_address) {
     return 0;
